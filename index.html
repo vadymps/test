@@ -18,10 +18,10 @@
       font-size: 2rem;
     }
 
-    #score {
+    #score, #timer {
       text-align: center;
       font-size: 1.5rem;
-      margin-bottom: 1rem;
+      margin: 0.5rem;
     }
 
     #gameArea {
@@ -49,12 +49,36 @@
       transition: top 0.2s, left 0.2s;
     }
 
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      display: none;
+      text-align: center;
+    }
+
+    #restartButton {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #3498db;
+      border: none;
+      color: white;
+      border-radius: 5px;
+    }
+
     @media (max-width: 600px) {
       h1 {
         font-size: 1.5rem;
       }
-
-      #score {
+      #score, #timer {
         font-size: 1.2rem;
       }
     }
@@ -64,15 +88,28 @@
 
 <h1>Click the Circle!</h1>
 <div id="score">Score: 0</div>
+<div id="timer">Time left: 3s</div>
 <div id="gameArea">
   <div id="circle"></div>
+  <div id="gameOver">
+    Game Over<br>
+    <button id="restartButton">Restart</button>
+  </div>
 </div>
 
 <script>
   const circle = document.getElementById('circle');
   const scoreDisplay = document.getElementById('score');
+  const timerDisplay = document.getElementById('timer');
   const gameArea = document.getElementById('gameArea');
+  const gameOverScreen = document.getElementById('gameOver');
+  const restartButton = document.getElementById('restartButton');
+
   let score = 0;
+  let timeoutId;
+  let countdownInterval;
+  const timeLimit = 3; // seconds
+  let timeLeft = timeLimit;
 
   function moveCircle() {
     const circleSize = circle.offsetWidth;
@@ -82,6 +119,51 @@
     const y = Math.random() * maxY;
     circle.style.left = `${x}px`;
     circle.style.top = `${y}px`;
+
+    resetLoseTimer(); // Restart the lose timer
+  }
+
+  function updateTimerDisplay() {
+    timerDisplay.textContent = `Time left: ${timeLeft}s`;
+  }
+
+  function startCountdown() {
+    clearInterval(countdownInterval);
+    timeLeft = timeLimit;
+    updateTimerDisplay();
+    countdownInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+      }
+    }, 1000);
+  }
+
+  function resetLoseTimer() {
+    clearTimeout(timeoutId);
+    clearInterval(countdownInterval);
+    timeLeft = timeLimit;
+    updateTimerDisplay();
+    startCountdown();
+    timeoutId = setTimeout(() => {
+      endGame();
+    }, timeLimit * 1000);
+  }
+
+  function endGame() {
+    circle.style.display = 'none';
+    gameOverScreen.style.display = 'block';
+    clearTimeout(timeoutId);
+    clearInterval(countdownInterval);
+  }
+
+  function restartGame() {
+    score = 0;
+    scoreDisplay.textContent = `Score: ${score}`;
+    gameOverScreen.style.display = 'none';
+    circle.style.display = 'block';
+    moveCircle();
   }
 
   circle.addEventListener('click', () => {
@@ -90,7 +172,8 @@
     moveCircle();
   });
 
-  // Ensure position is updated after styles are fully loaded
+  restartButton.addEventListener('click', restartGame);
+
   window.addEventListener('load', moveCircle);
   window.addEventListener('resize', moveCircle);
 </script>
